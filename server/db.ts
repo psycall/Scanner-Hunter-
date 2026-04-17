@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, wallets, paymentLinks, transactions, receipts } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,82 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * Wallet queries
+ */
+export async function getUserWallets(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(wallets).where(eq(wallets.userId, userId));
+}
+
+export async function getDefaultWallet(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(wallets).where(and(eq(wallets.userId, userId), eq(wallets.isDefault, true))).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Payment link queries
+ */
+export async function getPaymentLinkBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(paymentLinks).where(eq(paymentLinks.slug, slug)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserPaymentLinks(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(paymentLinks).where(eq(paymentLinks.creatorId, userId));
+}
+
+/**
+ * Transaction queries
+ */
+export async function getPaymentLinkTransactions(paymentLinkId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(transactions).where(eq(transactions.paymentLinkId, paymentLinkId));
+}
+
+export async function getUserTransactions(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // Get all transactions for payment links created by this user
+  const userLinks = await db.select({ id: paymentLinks.id }).from(paymentLinks).where(eq(paymentLinks.creatorId, userId));
+  const linkIds = userLinks.map(l => l.id);
+  if (linkIds.length === 0) return [];
+  // Return transactions for all user's payment links
+  return db.select().from(transactions).where(inArray(transactions.paymentLinkId, linkIds));
+}
+
+export async function getTransactionByHash(txHash: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(transactions).where(eq(transactions.txHash, txHash)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Receipt queries
+ */
+export async function getTransactionReceipts(transactionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(receipts).where(eq(receipts.transactionId, transactionId));
+}
+
+export async function getAllUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users);
+}
+
+export async function getAllTransactions() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(transactions);
+}

@@ -5,13 +5,29 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import Wallets from "./pages/Wallets";
+import CreatePaymentLink from "./pages/CreatePaymentLink";
+import PaymentPage from "./pages/PaymentPage";
+import PaymentLinks from "./pages/PaymentLinks";
+import Transactions from "./pages/Transactions";
+import AdminPanel from "./pages/AdminPanel";
+import { WagmiProvider } from 'wagmi';
+import { wagmiConfig } from "./lib/wagmi-config";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
+      <Route path="/" component={Home} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/wallets" component={Wallets} />
+      <Route path="/payment-links" component={PaymentLinks} />
+      <Route path="/payment-links/new" component={CreatePaymentLink} />
+      <Route path="/transactions" component={Transactions} />
+      <Route path="/admin" component={AdminPanel} />
+      <Route path="/pay/:slug" component={PaymentPage} />
+      <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
@@ -26,15 +42,17 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+      <WagmiProvider config={wagmiConfig}>
+        <ThemeProvider
+          defaultTheme="dark"
+          // switchable
+        >
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
+      </WagmiProvider>
     </ErrorBoundary>
   );
 }
