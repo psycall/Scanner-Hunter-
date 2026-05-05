@@ -14,6 +14,7 @@ import Transactions from "./pages/Transactions";
 import AdminPanel from "./pages/AdminPanel";
 import { WagmiProvider } from 'wagmi';
 import { wagmiConfig } from "./lib/wagmi-config";
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -50,6 +51,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <SpeedInsights />
           </TooltipProvider>
         </ThemeProvider>
       </WagmiProvider>
